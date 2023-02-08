@@ -1,4 +1,5 @@
-import { Text, View, StyleSheet, Alert } from "react-native";
+import { Text, View, StyleSheet, Alert, FlatList } from "react-native";
+import { Ionicons, AntDesign } from "@expo/vector-icons"
 import { useState, useEffect } from "react";
 import Title from "../components/Title";
 import NumberContainer from "../components/game/NumberContainer";
@@ -16,21 +17,24 @@ function generateRandomBetween(min: number, max: number, exclude: number): numbe
 
 let min = 1;
 let max = 100;
+let guesses = 1;
 
 interface prop {
     userNumber: number,
-    gameOver: () => void
+    gameOver: (x: number, y: number) => void
 }
 
 const GameScreen: React.FC<prop> = ({userNumber, gameOver}) => {
     const initialGuess = generateRandomBetween(min, max, userNumber);
     const [currentGuess, setCurrentGuess] = useState(initialGuess);
+    const [guessRounds, setGuessRounds] = useState([initialGuess]);
 
     useEffect(() => {
         if(userNumber === currentGuess) {
             min = 1;
             max = 100;
-            gameOver();
+            gameOver(guesses, userNumber);
+            guesses = 1;
         }
     }, [currentGuess]);
 
@@ -49,9 +53,11 @@ const GameScreen: React.FC<prop> = ({userNumber, gameOver}) => {
                 break;
         }
 
+        guesses += 1;
         console.log(min, max);
         const newNumber = generateRandomBetween(min, max, currentGuess);
         setCurrentGuess(newNumber);
+        setGuessRounds(previous => [newNumber, ...previous]);
     }
 
     return <View style={styles.screen}>
@@ -60,11 +66,13 @@ const GameScreen: React.FC<prop> = ({userNumber, gameOver}) => {
         <View>
             <Text>Higher or Lower</Text>
             <View>
-                <PrimaryButton pressedButton={nextGuessHandler.bind(this, "higher")}>+</PrimaryButton>
-                <PrimaryButton pressedButton={nextGuessHandler.bind(this, "lower")}>-</PrimaryButton>
+                <PrimaryButton pressedButton={nextGuessHandler.bind(this, "higher")}><AntDesign name="plus" size={16} color="white" /></PrimaryButton>
+                <PrimaryButton pressedButton={nextGuessHandler.bind(this, "lower")}><Ionicons name="remove-sharp" size={16} color="white" /></PrimaryButton>
             </View>
         </View>
-        <View><Text>Log</Text></View>
+        <View>
+            <FlatList data={guessRounds} renderItem={(itemData) => <Text>{itemData.item}</Text>} />
+        </View>
     </View>
 }
 
